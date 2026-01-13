@@ -64,7 +64,7 @@ const promos: Promo[] = [
   {
     id: '4',
     code: 'BEAUTY20',
-    store: 'Л'Этуаль',
+    store: 'Л\'Этуаль',
     discount: '-20%',
     description: 'Скидка 20% на косметику',
     category: 'beauty',
