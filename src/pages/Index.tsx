@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -121,7 +121,16 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('popular');
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('promogid-favorites');
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
 
   const parseDate = (dateStr: string) => {
     const [day, month, year] = dateStr.split('.');
@@ -165,6 +174,24 @@ export default function Index() {
     return diffDays;
   };
 
+  const toggleFavorite = (promoId: string) => {
+    const newFavorites = favorites.includes(promoId)
+      ? favorites.filter(id => id !== promoId)
+      : [...favorites, promoId];
+    setFavorites(newFavorites);
+    localStorage.setItem('promogid-favorites', JSON.stringify(newFavorites));
+    toast({
+      title: favorites.includes(promoId) ? 'Удалено из избранного' : 'Добавлено в избранное',
+      description: favorites.includes(promoId) 
+        ? 'Промокод удалён из избранного' 
+        : 'Промокод добавлен в избранное',
+    });
+  };
+
+  const displayedPromos = showFavorites
+    ? filteredPromos.filter(promo => favorites.includes(promo.id))
+    : filteredPromos;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-white sticky top-0 z-10">
@@ -174,7 +201,7 @@ export default function Index() {
               <Icon name="Tag" className="text-primary" size={32} />
               <h1 className="text-2xl font-bold">ПромоГид</h1>
             </div>
-            <nav className="hidden md:flex gap-6">
+            <nav className="hidden md:flex gap-6 items-center">
               <a href="#" className="text-sm font-medium hover:text-primary transition-colors">
                 Главная
               </a>
@@ -190,6 +217,19 @@ export default function Index() {
               <a href="#contacts" className="text-sm font-medium hover:text-primary transition-colors">
                 Контакты
               </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowFavorites(!showFavorites)}
+                className="gap-2 relative"
+              >
+                <Icon name="Heart" size={20} className={showFavorites ? 'fill-primary text-primary' : ''} />
+                {favorites.length > 0 && (
+                  <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {favorites.length}
+                  </Badge>
+                )}
+              </Button>
             </nav>
           </div>
         </div>
@@ -282,11 +322,30 @@ export default function Index() {
               </Button>
             </div>
           </div>
+          {showFavorites && displayedPromos.length === 0 && (
+            <div className="text-center py-12 col-span-full">
+              <Icon name="Heart" size={48} className="mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground mb-2">В избранном пока нет промокодов</p>
+              <p className="text-sm text-muted-foreground">Нажмите на сердечко в карточке промокода, чтобы добавить его в избранное</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPromos.map((promo) => (
-              <Card key={promo.id} className="hover:shadow-lg transition-shadow animate-fade-in">
+            {displayedPromos.map((promo) => (
+              <Card key={promo.id} className="hover:shadow-lg transition-shadow animate-fade-in relative">
                 <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={() => toggleFavorite(promo.id)}
+                  >
+                    <Icon
+                      name="Heart"
+                      size={18}
+                      className={favorites.includes(promo.id) ? 'fill-primary text-primary' : 'text-muted-foreground'}
+                    />
+                  </Button>
+                  <div className="flex justify-between items-start mb-4 pr-8">
                     <div>
                       <h4 className="font-semibold text-lg mb-1">{promo.store}</h4>
                       <p className="text-sm text-muted-foreground">{promo.description}</p>
