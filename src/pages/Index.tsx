@@ -15,6 +15,7 @@ interface Promo {
   category: string;
   expiresAt: string;
   isTop?: boolean;
+  uses: number;
 }
 
 const categories = [
@@ -37,6 +38,7 @@ const promos: Promo[] = [
     category: 'fashion',
     expiresAt: '31.01.2026',
     isTop: true,
+    uses: 1524,
   },
   {
     id: '2',
@@ -47,6 +49,7 @@ const promos: Promo[] = [
     category: 'electronics',
     expiresAt: '20.01.2026',
     isTop: true,
+    uses: 892,
   },
   {
     id: '3',
@@ -56,6 +59,7 @@ const promos: Promo[] = [
     description: 'Скидка 15% на доставку еды',
     category: 'food',
     expiresAt: '25.01.2026',
+    uses: 634,
   },
   {
     id: '4',
@@ -66,6 +70,7 @@ const promos: Promo[] = [
     category: 'beauty',
     expiresAt: '15.02.2026',
     isTop: true,
+    uses: 1203,
   },
   {
     id: '5',
@@ -75,6 +80,7 @@ const promos: Promo[] = [
     description: 'Скидка 2000₽ на авиабилеты',
     category: 'travel',
     expiresAt: '28.02.2026',
+    uses: 445,
   },
   {
     id: '6',
@@ -84,6 +90,7 @@ const promos: Promo[] = [
     description: 'Скидка 30% на мебель',
     category: 'home',
     expiresAt: '10.02.2026',
+    uses: 723,
   },
   {
     id: '7',
@@ -93,6 +100,7 @@ const promos: Promo[] = [
     description: 'Скидка 100₽ при заказе от 1000₽',
     category: 'electronics',
     expiresAt: '31.01.2026',
+    uses: 987,
   },
   {
     id: '8',
@@ -102,22 +110,40 @@ const promos: Promo[] = [
     description: 'Скидка 25% на обувь и аксессуары',
     category: 'fashion',
     expiresAt: '18.01.2026',
+    uses: 556,
   },
 ];
+
+type SortOption = 'popular' | 'expiring' | 'newest';
 
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('popular');
   const { toast } = useToast();
 
-  const filteredPromos = promos.filter((promo) => {
-    const matchesCategory = selectedCategory === 'all' || promo.category === selectedCategory;
-    const matchesSearch =
-      promo.store.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      promo.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const parseDate = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('.');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  };
+
+  const filteredPromos = promos
+    .filter((promo) => {
+      const matchesCategory = selectedCategory === 'all' || promo.category === selectedCategory;
+      const matchesSearch =
+        promo.store.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        promo.description.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'popular') {
+        return b.uses - a.uses;
+      } else if (sortBy === 'expiring') {
+        return parseDate(a.expiresAt).getTime() - parseDate(b.expiresAt).getTime();
+      }
+      return 0;
+    });
 
   const topStores = Array.from(new Set(promos.filter(p => p.isTop).map(p => p.store)));
 
@@ -129,6 +155,14 @@ export default function Index() {
       description: `Код ${code} скопирован в буфер обмена`,
     });
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const getDaysLeft = (dateStr: string) => {
+    const expiryDate = parseDate(dateStr);
+    const today = new Date();
+    const diffTime = expiryDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
   };
 
   return (
@@ -223,9 +257,31 @@ export default function Index() {
 
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <h3 className="text-2xl font-semibold mb-6">
-            {selectedCategory === 'all' ? 'Все промокоды' : 'Промокоды по категории'}
-          </h3>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-2xl font-semibold">
+              {selectedCategory === 'all' ? 'Все промокоды' : 'Промокоды по категории'}
+            </h3>
+            <div className="flex gap-2">
+              <Button
+                variant={sortBy === 'popular' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('popular')}
+                className="gap-2"
+              >
+                <Icon name="TrendingUp" size={16} />
+                Популярные
+              </Button>
+              <Button
+                variant={sortBy === 'expiring' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortBy('expiring')}
+                className="gap-2"
+              >
+                <Icon name="Clock" size={16} />
+                Скоро истекут
+              </Button>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPromos.map((promo) => (
               <Card key={promo.id} className="hover:shadow-lg transition-shadow animate-fade-in">
@@ -234,6 +290,12 @@ export default function Index() {
                     <div>
                       <h4 className="font-semibold text-lg mb-1">{promo.store}</h4>
                       <p className="text-sm text-muted-foreground">{promo.description}</p>
+                      <div className="flex items-center gap-1 mt-2">
+                        <Icon name="Users" size={14} className="text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">
+                          {promo.uses.toLocaleString()} использований
+                        </span>
+                      </div>
                     </div>
                     {promo.isTop && (
                       <Badge variant="default" className="ml-2">
@@ -253,9 +315,19 @@ export default function Index() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Icon name="Clock" size={14} />
-                      до {promo.expiresAt}
+                    <div className="flex items-center gap-1 text-xs">
+                      {(() => {
+                        const daysLeft = getDaysLeft(promo.expiresAt);
+                        const isExpiringSoon = daysLeft <= 7;
+                        return (
+                          <>
+                            <Icon name="Clock" size={14} className={isExpiringSoon ? 'text-destructive' : 'text-muted-foreground'} />
+                            <span className={isExpiringSoon ? 'text-destructive font-medium' : 'text-muted-foreground'}>
+                              {daysLeft <= 0 ? 'Истёк' : daysLeft === 1 ? '1 день' : `${daysLeft} дн.`}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </div>
                     <Button
                       onClick={() => copyToClipboard(promo.code, promo.id)}
