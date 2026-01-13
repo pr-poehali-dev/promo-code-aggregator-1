@@ -126,7 +126,7 @@ export default function Index() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const savedFavorites = localStorage.getItem('promogid-favorites');
+    const savedFavorites = localStorage.getItem('berikod-favorites');
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites));
     }
@@ -179,7 +179,7 @@ export default function Index() {
       ? favorites.filter(id => id !== promoId)
       : [...favorites, promoId];
     setFavorites(newFavorites);
-    localStorage.setItem('promogid-favorites', JSON.stringify(newFavorites));
+    localStorage.setItem('berikod-favorites', JSON.stringify(newFavorites));
     toast({
       title: favorites.includes(promoId) ? 'Удалено из избранного' : 'Добавлено в избранное',
       description: favorites.includes(promoId) 
@@ -199,7 +199,7 @@ export default function Index() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Icon name="Tag" className="text-primary" size={32} />
-              <h1 className="text-2xl font-bold">ПромоГид</h1>
+              <h1 className="text-2xl font-bold">БериКод</h1>
             </div>
             <nav className="hidden md:flex gap-6 items-center">
               <a href="#" className="text-sm font-medium hover:text-primary transition-colors">
@@ -423,7 +423,7 @@ export default function Index() {
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <h3 className="text-3xl font-semibold mb-4">О проекте</h3>
           <p className="text-muted-foreground mb-6">
-            ПромоГид — это агрегатор актуальных промокодов и скидок от популярных интернет-магазинов.
+            БериКод — это агрегатор актуальных промокодов и скидок от популярных интернет-магазинов.
             Мы собираем лучшие предложения в одном месте, чтобы вы могли экономить на каждой покупке.
           </p>
           <p className="text-muted-foreground">
@@ -441,14 +441,14 @@ export default function Index() {
           </p>
           <div className="flex justify-center gap-6">
             <a
-              href="mailto:info@promogid.ru"
+              href="mailto:info@berikod.ru"
               className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
             >
               <Icon name="Mail" size={20} />
-              info@promogid.ru
+              info@berikod.ru
             </a>
             <a
-              href="https://t.me/promogid"
+              href="https://t.me/berikod"
               className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
             >
               <Icon name="MessageCircle" size={20} />
@@ -460,7 +460,7 @@ export default function Index() {
 
       <footer className="border-t bg-white py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2026 ПромоГид. Все права защищены.</p>
+          <p>© 2026 БериКод. Все права защищены.</p>
         </div>
       </footer>
     </div>
